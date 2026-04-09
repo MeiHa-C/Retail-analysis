@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 df = pd.read_csv("./data/online_retail_II.csv")
 
@@ -259,7 +260,95 @@ def transaction_analysis(df_clean):
     plt.show()
 
 
+def revenue_analysis(df):
+    """
+    Revenue analysis by customer groups then plot charts. 
+    Compare with Stacked/Grouped bar charts, and different X-axis
+    """
+
+    # Fill up the empty customer ID as 'Guest'
+    df['Customer ID'] = df['Customer ID'].fillna('Guest')
+
+    df['Revenue'] = df['Quantity'] * df['Price']
+    revenue = df.groupby('Customer ID')['Revenue'].sum()
+    total_revenue = revenue.sum()
+    guest_revenue = revenue['Guest']
+    known_customer = revenue.drop('Guest').sort_values(ascending=False)
+    top_customer = known_customer.nlargest(int(len(known_customer) *0.2))
+    top_customer_revenue = top_customer.sum()
+    rest_revenue = total_revenue - guest_revenue - top_customer_revenue
+
+    total_tx = len(df)
+    guest_tx = (df['Customer ID']=='Guest').sum()
+    top_customer_tx = len(df[df['Customer ID'].isin(top_customer.index)])
+    rest_tx = total_tx - guest_tx - top_customer_tx
+
+    print('\n== Revenue','='*50)
+    print(f'High-Value Customers(Top 20%) account for {top_customer_tx/total_tx*100:.2f}% of transaction volume, and contribute {top_customer_revenue/total_revenue*100:.2f}% of total revenue.')
+    print(f'Guests account for {guest_tx/total_tx*100:.2f}% of transaction volume, and account for {guest_revenue/total_revenue*100:.2f}% of revenue.')
+    print(f'The rest of the customers account for {rest_tx/total_tx*100:.2f}% of transaction volume, and account for {rest_revenue/total_revenue*100:.2f}% of revenue.')
+
+
+
+    ## 1. Stacked Bar chart
+    category = ['Transaction volume', 'Revenue']
+    guest_data = np.array([guest_tx/total_tx*100, guest_revenue/total_revenue*100])
+    rest_data = np.array([rest_tx/total_tx*100, rest_revenue/total_revenue*100])
+    top_data = np.array([top_customer_tx/total_tx*100, top_customer_revenue/total_revenue*100])
+
+    plt.figure(figsize=(10,6))
+    plt.bar(category, guest_data, label='Guest')
+    plt.bar(category, rest_data, bottom=guest_data, label='Rest of Customers')
+    plt.bar(category, top_data, bottom=guest_data+rest_data, label='High-Value Customers(Top 20%)')
+    
+    plt.title('Transaction Volume vs. Revenue by Customer Group')
+    plt.ylabel('Percentage (%)')
+    plt.legend(title='Customer group')
+    plt.tight_layout()
+    plt.show()
+
+
+    ## 2. Grouped bar chart, X=metrics
+    plt.figure(figsize=(8, 5))
+    guest_data = np.array([guest_tx/total_tx*100, guest_revenue/total_revenue*100])
+    rest_data = np.array([rest_tx/total_tx*100, rest_revenue/total_revenue*100])
+    top_data = np.array([top_customer_tx/total_tx*100, top_customer_revenue/total_revenue*100])
+    x = np.arange(2)
+    width = 0.2
+
+    plt.bar(x-width, guest_data, width, label='Guest', color='cyan')
+    plt.bar(x, rest_data, width, label='Rest of Customers', color='orange')
+    plt.bar(x+width, top_data, width, label='High-Value Customers (Top 20%)', color='green')
+
+    plt.title('Transaction Volume vs. Revenue by Customer Group')
+    plt.xticks(x, ['Transaction Volume', 'Revenue'])
+    plt.ylabel('Percentage (%)')
+    plt.legend(title='Customer Group')
+    plt.show()
+
+
+    ## 3.Grouped bar chart, X=customer group
+    plt.figure(figsize=(8, 5))
+    trans_data = np.array([guest_tx/total_tx*100, rest_tx/total_tx*100, top_customer_tx/total_tx*100])
+    revenue_data = np.array([guest_revenue/total_revenue*100, rest_revenue/total_revenue*100, top_customer_revenue/total_revenue*100])
+    x = np.arange(3)
+
+    plt.bar(x-width, trans_data, width, label='Transaction Volume', color='cyan')
+    plt.bar(x, revenue_data, width, label='Revenue', color='orange')
+
+    plt.title('Transaction Volume vs. Revenue by Customer Group')
+    plt.xticks(x, ['Guest', 'Rest of Customers', 'High-Value Customers (Top 20%)'])
+    plt.xlabel('Customer Group')
+    plt.ylabel('Percentage (%)')
+    plt.legend(title='Metrics')
+    plt.tight_layout()
+    plt.show()
+
+
+
+
 strutureAndQuality(df)
 df_clean = standardise_desc(df)
 df_clean = create_features(df_clean)
 transaction_analysis(df_clean)
+revenue_analysis(df_clean)

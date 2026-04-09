@@ -40,4 +40,6 @@ The demand patterns have implications across multiple functions:
 
 
 ## Visualisation
-![alt text](<Customer Transaction Patterns by Hour and Weekday.png>)
+![alt text](<Images/Customer Transaction Patterns by Hour and Weekday.png>)
+![alt text](<Images/Customer group_stacked chart.png>)
+
