@@ -173,6 +173,7 @@ def create_features(df_clean):
 
     # Convert datetime and date feature
     df_clean['InvoiceDate'] = pd.to_datetime(df_clean['InvoiceDate'])
+    df_clean['Year'] = df_clean['InvoiceDate'].dt.year
     df_clean['Month'] = df_clean['InvoiceDate'].dt.month
     df_clean['Hour'] = df_clean['InvoiceDate'].dt.hour
 
@@ -345,6 +346,35 @@ def revenue_analysis(df):
     plt.show()
 
 
+def cohort_analysis(df_clean):
+    """
+    Segments customers into different cohorts based on their first purchase month and tracks their monthly retention rates.
+    """
+    df_cohort = df_clean[df_clean['Customer ID'] != 'Guest'].copy()
+    # The first purchase, 'YYYY-MM'
+    df_cohort['CohortMonth'] = df_cohort.groupby('Customer ID')['InvoiceDate'].transform('min').dt.to_period('M')
+    cohort_year = df_cohort['CohortMonth'].dt.year
+    cohort_month = df_cohort['CohortMonth'].dt.month
+    years_diff = df_cohort['Year'] - cohort_year
+    months_diff = df_cohort['Month'] - cohort_month
+    df_cohort['CohortIndex'] = years_diff*12 + months_diff + 1
+
+    # Count unique customer of each cohort in every months
+    cohort_count = df_cohort.groupby(['CohortMonth', 'CohortIndex'])['Customer ID'].nunique().unstack()
+    # Devide the number of customer in each month by the first month
+    retention = cohort_count.divide(cohort_count.iloc[:, 0], axis=0).round(4)
+    retention.index = retention.index.astype(str)
+
+    # Plot
+    plt.figure(figsize=(12, 6))
+    sns.heatmap(retention, annot=True, fmt='.0%', vmin=0.0, vmax=0.6)
+    plt.title('Customer Retention Cohort Analysis')
+    plt.xlabel('Months Since First Purchase')
+    plt.ylabel('First Purchase Month (Cohort)')
+    plt.tight_layout()
+    plt.show()
+
+
 
 
 strutureAndQuality(df)
@@ -352,3 +382,4 @@ df_clean = standardise_desc(df)
 df_clean = create_features(df_clean)
 transaction_analysis(df_clean)
 revenue_analysis(df_clean)
+cohort_analysis(df_clean)
