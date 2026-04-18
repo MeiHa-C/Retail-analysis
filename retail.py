@@ -265,6 +265,11 @@ def revenue_analysis(df):
     """
     Revenue analysis by customer groups then plot charts. 
     Compare with Stacked/Grouped bar charts, and different X-axis
+
+    Args:
+        Cleaned dataframe
+    Returns: 
+        Top customers' ID to compare with cohorts
     """
 
     # Fill up the empty customer ID as 'Guest'
@@ -345,10 +350,17 @@ def revenue_analysis(df):
     plt.tight_layout()
     plt.show()
 
+    return top_customer.index
+
 
 def cohort_analysis(df_clean):
     """
     Segments customers into different cohorts based on their first purchase month and tracks their monthly retention rates.
+
+    Args:
+        Cleaned dataframe
+    Returns:
+        Brand advocates (Cohort 0912) to compare with top customers' ID
     """
     df_cohort = df_clean[df_clean['Customer ID'] != 'Guest'].copy()
     # The first purchase, 'YYYY-MM'
@@ -374,6 +386,24 @@ def cohort_analysis(df_clean):
     plt.tight_layout()
     plt.show()
 
+    # Top value cohort
+    cohort_0912_id = df_cohort[df_cohort['CohortMonth'] == '2009-12']['Customer ID'].unique()
+    return cohort_0912_id
+    
+
+def top_customer_overlap_analysis(top20_customer, top_cohort):
+    """
+    Analysis the overlap between Top 20% (High value) custmers and the highest retention cohort
+    """
+    print('\n== Top customer Overlap','='*50)
+
+    overlap = top20_customer.intersection(top_cohort)
+    top20_customer_count = len(top20_customer)
+    top_cohort_count = len(top_cohort)
+    overlap_count = len(overlap)
+
+    print(f'What percentage of High-value Customers stay from the beginning? {overlap_count/top20_customer_count*100:.2f}%')
+    print(f'What percentage of Early adopters became High-value Customers? {overlap_count/top_cohort_count*100:.2f}%')
 
 
 
@@ -381,5 +411,6 @@ strutureAndQuality(df)
 df_clean = standardise_desc(df)
 df_clean = create_features(df_clean)
 transaction_analysis(df_clean)
-revenue_analysis(df_clean)
-cohort_analysis(df_clean)
+top20_customer = revenue_analysis(df_clean)
+top_cohort = cohort_analysis(df_clean)
+top_customer_overlap_analysis(top20_customer, top_cohort)

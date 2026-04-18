@@ -36,6 +36,10 @@ The top 20% of customers contribute nearly two-thirds of total revenue, indicati
 - The earliest cohort (2009-12) shows relatively higher retention, potentially due to early adopter behaviour. 
 - Retention drops significantly after the first month across all cohorts
 
+### 4. Customer Segment Overlap Analysis
+- 42.7% of high-value customers belong to the earliest cohort  
+- 48.5% of early adopters become high-value customers
+
 
 ## Business Impact
 ### 1. Transaction Patterns
@@ -51,6 +55,10 @@ This suggests that retaining high-value customers should be a priority, as they 
 - Promotional campaigns and restock inventory ahead of the shopping peak
 - Further analysis is needed to understand behavioural differences across cohorts
 - Improving first-time customer experience is critical for retention
+
+### 4. Customer Segment Overlap Analysis
+Suggests that early engagement may play a key role in developing high-value customers.
+While further investigation is needed between acquisition timing and lifetime value, the data indicates that acquiring and nurturing early-stage customers yields the highest long-term ROI.
 
 
 ## Visualisation
