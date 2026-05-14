@@ -406,6 +406,71 @@ def top_customer_overlap_analysis(top20_customer, top_cohort):
     print(f'What percentage of Early adopters became High-value Customers? {overlap_count/top_cohort_count*100:.2f}%')
 
 
+def product_analysis(df_clean):
+    """
+    Purchasing Behavior between VVIP and regular
+    """
+    print('\n== Product Analysis, Purchasing Behavior','='*50)
+
+    vvip_df = df_clean[df_clean['Customer ID'].isin(top20_customer)]
+    rest_df = df_clean[~df_clean['Customer ID'].isin(top20_customer)]
+
+    # Average value per order
+    vvip_avg_value = vvip_df.groupby('Invoice')['Revenue'].sum().mean()
+    rest_avg_value = rest_df.groupby('Invoice')['Revenue'].sum().mean()
+    aov_multiple = vvip_avg_value / rest_avg_value
+    # Average items amount per order
+    vvip_item = vvip_df.groupby('Invoice')['Quantity'].sum().mean()
+    rest_item = rest_df.groupby('Invoice')['Quantity'].sum().mean()
+    item_multiple = vvip_item / rest_item
+    # Average Unit Price of the group
+    vvip_avg_price = vvip_df['Revenue'].sum() / vvip_df['Quantity'].sum()
+    rest_avg_price = rest_df['Revenue'].sum() / rest_df['Quantity'].sum()
+    price_multiple = vvip_avg_price / rest_avg_price
+
+    print('\n===== Two groups comparison =====')
+    print(f'Average Order Value (AOV): VVIP = ${vvip_avg_value:.1f}| Regular = ${rest_avg_value:.1f}')
+    print(f'Average items per order: VVIP = {vvip_item:.1f} items | Regular = {rest_item:.1f} items. VVIP buy {item_multiple:.1f} times more than regular customers.')
+    print(f'Average unit price: VVIP = {vvip_avg_price:.1f}| Regular = ${rest_avg_price:.1f}')
+
+    # Concentration and Top10 most purchased items
+    vvip_top10_item = vvip_df.groupby('Description')['Revenue'].sum().sort_values(ascending=False).head(10)
+    rest_top10_item = rest_df.groupby('Description')['Revenue'].sum().sort_values(ascending=False).head(10)
+    vvip_concentration = vvip_top10_item.sum() / vvip_df['Revenue'].sum() *100
+
+    print('\n===== Revenue concentration =====')
+    print(f'VVIPs purchased {vvip_df['Description'].nunique()} unique items.')
+    print(f'Top 10 items account for {vvip_concentration:.2F}% of their total revenue.')
+
+    print('\n===== Product Preferences =====')
+    overlap_item = set(vvip_top10_item.index).intersection(set(rest_top10_item.index))
+    # print(f'Top10 most purchased items by VVIP:\n {set(vvip_top10_item.index)}')
+    # print(f'Top10 most purchased items by Regular customers:\n {set(rest_top10_item.index)}')
+    print(f'{len(overlap_item)} items appear in both top 10 lists, they are:\n{overlap_item}')
+
+
+    # plot
+    metric = ['Unit Price', 'AOV', 'Items per Order']
+    ratio = [price_multiple, aov_multiple, item_multiple]
+
+    plt.figure(figsize=(10, 4))
+    plt.ylim(-0.5, 2.5) # Chart frame hights
+    plt.axvline(x=1, linestyle='--', zorder=0) # baseline: regular customer=1x
+    plt.text(0.7, 2.55, s='Regular Customer Baseline (1.0x)', fontsize=10, va='bottom')
+    plt.title('VVIP vs. Regular Customer Purchasing Behaviour (Relative Comparison)', fontsize=14, fontweight='bold', pad=25) #pad=top spine gap
+    plt.xlabel('Ratio (Times)')
+
+    colors = ['red' if r>1 else 'gray' for r in ratio]
+    bars = plt.barh(metric, ratio, color=colors, height=0.5)
+    for bar in bars:
+        width = bar.get_width()
+        plt.text(width+0.01, bar.get_y()+(bar.get_height()/2), s=f'{width:.1f}x')
+
+    plt.tight_layout()
+    plt.show()
+
+
+
 
 strutureAndQuality(df)
 df_clean = standardise_desc(df)
@@ -414,3 +479,4 @@ transaction_analysis(df_clean)
 top20_customer = revenue_analysis(df_clean)
 top_cohort = cohort_analysis(df_clean)
 top_customer_overlap_analysis(top20_customer, top_cohort)
+product_analysis(df_clean)
